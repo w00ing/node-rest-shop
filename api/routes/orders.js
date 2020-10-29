@@ -7,7 +7,10 @@ const Product = require("../models/product");
 
 router.get("/", async (req, res, next) => {
   try {
-    const orders = await Order.find().select("product quantity _id").exec();
+    const orders = await Order.find()
+      .select("product quantity _id")
+      .populate("product", "name")
+      .exec();
     res.status(200).json({
       count: orders.length,
       orders: orders.map((order) => {
@@ -60,7 +63,9 @@ router.post("/", async (req, res, next) => {
 
 router.get("/:orderId", async (req, res, next) => {
   try {
-    const order = await Order.findById(req.params.orderId);
+    const order = await Order.findById(req.params.orderId)
+      .populate("product")
+      .exec();
     if (!order) {
       return res.status(500).json({ message: "Order not found" });
     }
