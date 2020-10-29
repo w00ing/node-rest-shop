@@ -13,4 +13,41 @@ router.post("/", (req, res, next) => {
   });
 });
 
+router.get("/:productId", (req, res, next) => {
+  const {
+    params: { productId: id },
+  } = req.params;
+  if (id === "special") {
+    res.status(200).json({
+      message: "You discovered the special ID",
+      id,
+    });
+  } else {
+    res.status(200).json({
+      message: "You passed an ID",
+      id,
+    });
+  }
+});
+
+router.patch("/:productId", (req, res, next) => {
+  const {
+    params: { productId: id },
+  } = req;
+  res.status(200).json({
+    message: "Updated product",
+    id,
+  });
+});
+
+router.delete("/:productId", (req, res, next) => {
+  const {
+    params: { productId: id },
+  } = req;
+  res.status(200).json({
+    message: "Deleted product",
+    id,
+  });
+});
+
 module.exports = router;
