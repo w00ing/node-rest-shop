@@ -8,7 +8,7 @@ const productRoutes = require("./api/routes/products");
 const orderRoutes = require("./api/routes/orders");
 
 mongoose.connect(
-  `mongodb+srv://admin:${process.env.MONGO_ATLAS_PW}@node-rest-shop.pyssi.mongodb.net/<dbname>?retryWrites=true&w=majority`,
+  `mongodb+srv://admin:${process.env.MONGO_ATLAS_PW}@node-rest-shop.pyssi.mongodb.net/${process.env.MONGO_ATLAS_DBNAME}?retryWrites=true&w=majority`,
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
