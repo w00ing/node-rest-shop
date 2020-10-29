@@ -13,4 +13,4 @@ router.post("/", (req, res, next) => {
   });
 });
 
-module.exports = products;
+module.exports = router;
