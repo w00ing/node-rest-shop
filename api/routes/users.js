@@ -29,4 +29,18 @@ router.post("/signup", async (req, res, next) => {
   }
 });
 
+router.delete("/:userId", async (req, res, next) => {
+  try {
+    const { userId: id } = req.body;
+    const result = await User.findByIdAndDelete(id);
+    console.log(result);
+    res.status(200).json({
+      message: "User deleted",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error });
+  }
+});
+
 module.exports = router;
