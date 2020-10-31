@@ -8,7 +8,7 @@ const storage = multer.diskStorage({
     cb(null, "./uploads/");
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + file.originalname);
+    cb(null, Date.now() + file.originalname.replace(/ /g, "_"));
   },
 });
 
@@ -33,12 +33,17 @@ const Product = require("../models/product");
 
 router.get("/", async (req, res, next) => {
   try {
-    const products = await Product.find().select("name price _id").exec();
+    const products = await Product.find()
+      .select("name price _id productImage")
+      .exec();
+    console.log(products);
     const response = {
       count: products.length,
       products: products.map((product) => {
+        console.log(product);
         return {
           ...product["_doc"],
+          productImage: product.productImage,
           request: {
             type: "GET",
             url: `${req.protocol}://${req.get("host")}/products/${product._id}`,
@@ -59,9 +64,10 @@ router.post("/", upload.single("productImage"), async (req, res, next) => {
     _id: new mongoose.Types.ObjectId(),
     name: req.body.name,
     price: req.body.price,
+    productImage: req.file.path,
   });
   try {
-    const { name, _id, price } = await newProduct.save();
+    const { name, _id, price, productImage } = await newProduct.save();
 
     res.status(201).json({
       message: "Created product successfully",
@@ -69,6 +75,7 @@ router.post("/", upload.single("productImage"), async (req, res, next) => {
         name,
         _id,
         price,
+        productImage,
         request: {
           type: "GET",
           url: `${req.protocol}://${req.get("host")}/products/${_id}`,
@@ -86,7 +93,9 @@ router.get("/:productId", async (req, res, next) => {
     params: { productId: id },
   } = req;
   try {
-    const product = await Product.findById(id).select("name price _id").exec();
+    const product = await Product.findById(id)
+      .select("name price _id productImage")
+      .exec();
     console.log("From Database", product);
     product
       ? res.status(200).json({
