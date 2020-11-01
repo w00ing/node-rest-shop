@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const multer = require("multer");
 const checkAuth = require("../middleware/check-auth");
+const ProductsController = require("../controllers/products");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -32,146 +33,27 @@ const upload = multer({
 
 const Product = require("../models/product");
 
-router.get("/", async (req, res, next) => {
-  try {
-    const products = await Product.find()
-      .select("name price _id productImage")
-      .exec();
-    console.log(products);
-    const response = {
-      count: products.length,
-      products: products.map((product) => {
-        console.log(product);
-        return {
-          ...product["_doc"],
-          productImage: product.productImage,
-          request: {
-            type: "GET",
-            url: `${req.protocol}://${req.get("host")}/products/${product._id}`,
-          },
-        };
-      }),
-    };
-    res.status(200).json(response);
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error });
-  }
-});
+router.get("/", ProductsController.products_get_all);
 
 router.post(
   "/",
   checkAuth,
   upload.single("productImage"),
-  async (req, res, next) => {
-    console.log(req.file);
-    const newProduct = new Product({
-      _id: new mongoose.Types.ObjectId(),
-      name: req.body.name,
-      price: req.body.price,
-      productImage: req.file.path,
-    });
-    try {
-      const { name, _id, price, productImage } = await newProduct.save();
-
-      res.status(201).json({
-        message: "Created product successfully",
-        createdProduct: {
-          name,
-          _id,
-          price,
-          productImage,
-          request: {
-            type: "GET",
-            url: `${req.protocol}://${req.get("host")}/products/${_id}`,
-          },
-        },
-      });
-    } catch (error) {
-      console.log(error);
-      res.status(500).json({ error });
-    }
-  },
+  ProductsController.products_create_product,
 );
 
-router.get("/:productId", async (req, res, next) => {
-  const {
-    params: { productId: id },
-  } = req;
-  try {
-    const product = await Product.findById(id)
-      .select("name price _id productImage")
-      .exec();
-    console.log("From Database", product);
-    product
-      ? res.status(200).json({
-          ...product["_doc"],
-          request: {
-            type: "GET",
-            description: "Get all products",
-            url: `${req.protocol}://${req.get("host")}/products`,
-          },
-        })
-      : res
-          .status(404)
-          .json({ message: "No valid entry found for the provided ID" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error });
-  }
-});
+router.get("/:productId", ProductsController.products_get_product);
 
-router.patch("/:productId", checkAuth, async (req, res, next) => {
-  const {
-    params: { productId: id },
-  } = req;
-  const { body: props } = req;
-  console.log(props);
-  try {
-    const product = await Product.findByIdAndUpdate(id, props, {
-      new: true,
-    }).exec();
-    console.log(product);
-    product
-      ? res.status(200).json({
-          message: "Product updated",
-          ...product["_doc"],
-          request: {
-            type: "GET",
-            url: `${req.protocol}://${req.get("host")}/products/${product._id}`,
-          },
-        })
-      : res.status(404).json({ message: "Entry not found" });
-  } catch (error) {
-    console.log(error.message);
-    res.status(500).json({ error });
-  }
-});
+router.patch(
+  "/:productId",
+  checkAuth,
+  ProductsController.products_update_product,
+);
 
-router.delete("/:productId", checkAuth, async (req, res, next) => {
-  const {
-    params: { productId: id },
-  } = req;
-  try {
-    const product = await Product.findByIdAndDelete({ _id: id }).exec();
-    console.log(product);
-    product
-      ? res.status(200).json({
-          message: "Deleted product",
-          ...product["_doc"],
-          request: {
-            type: "POST",
-            url: `${req.protocol}://${req.get("host")}/products/${product._id}`,
-            body: { name: "String", price: "Number" },
-          },
-        })
-      : res.status(404).json({
-          message: "No entry found",
-        });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error });
-  }
-});
+router.delete(
+  "/:productId",
+  checkAuth,
+  ProductsController.products_delete_product,
+);
 
 module.exports = router;
