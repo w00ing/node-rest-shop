@@ -1,6 +1,8 @@
 {
     "env":{
         "MONGO_ATLAS_PW": "123",
-        "MONGO_ATLAS_DBNAME": "node-rest-shop"
+        "MONGO_ATLAS_DBNAME": "node-rest-shop",
+        "JWT_KEY": "secret"
+
     }
 }
