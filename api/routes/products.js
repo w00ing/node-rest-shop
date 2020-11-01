@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const multer = require("multer");
+const checkAuth = require("../middleware/check-auth");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -58,35 +59,40 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-router.post("/", upload.single("productImage"), async (req, res, next) => {
-  console.log(req.file);
-  const newProduct = new Product({
-    _id: new mongoose.Types.ObjectId(),
-    name: req.body.name,
-    price: req.body.price,
-    productImage: req.file.path,
-  });
-  try {
-    const { name, _id, price, productImage } = await newProduct.save();
-
-    res.status(201).json({
-      message: "Created product successfully",
-      createdProduct: {
-        name,
-        _id,
-        price,
-        productImage,
-        request: {
-          type: "GET",
-          url: `${req.protocol}://${req.get("host")}/products/${_id}`,
-        },
-      },
+router.post(
+  "/",
+  checkAuth,
+  upload.single("productImage"),
+  async (req, res, next) => {
+    console.log(req.file);
+    const newProduct = new Product({
+      _id: new mongoose.Types.ObjectId(),
+      name: req.body.name,
+      price: req.body.price,
+      productImage: req.file.path,
     });
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error });
-  }
-});
+    try {
+      const { name, _id, price, productImage } = await newProduct.save();
+
+      res.status(201).json({
+        message: "Created product successfully",
+        createdProduct: {
+          name,
+          _id,
+          price,
+          productImage,
+          request: {
+            type: "GET",
+            url: `${req.protocol}://${req.get("host")}/products/${_id}`,
+          },
+        },
+      });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error });
+    }
+  },
+);
 
 router.get("/:productId", async (req, res, next) => {
   const {
@@ -115,7 +121,7 @@ router.get("/:productId", async (req, res, next) => {
   }
 });
 
-router.patch("/:productId", async (req, res, next) => {
+router.patch("/:productId", checkAuth, async (req, res, next) => {
   const {
     params: { productId: id },
   } = req;
@@ -142,7 +148,7 @@ router.patch("/:productId", async (req, res, next) => {
   }
 });
 
-router.delete("/:productId", async (req, res, next) => {
+router.delete("/:productId", checkAuth, async (req, res, next) => {
   const {
     params: { productId: id },
   } = req;
